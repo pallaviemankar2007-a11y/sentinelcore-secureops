@@ -7,5 +7,5 @@ git commit -m "Initial commit: Repository base setup"
 
 # Link to your GitHub public repo (replace with your actual URL)
 git branch -M main
-git remote add origin https://github.com/YOUR_USERNAME/sentinelcore-secureops.git
+git remote add origin https://github.com/pallaviemankar2007-a11y/sentinelcore-secureops.git
 git push -u origin main

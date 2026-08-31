@@ -33,12 +33,13 @@ public class AuthController {
         this.jwtService = jwtService;
     }
 
-    @PostMapping("/register")
+    // Accepts both /signup and /register to match frontend calls
+    @PostMapping({"/signup", "/register"})
     public ResponseEntity<?> register(@RequestBody User user) {
 
         if (userRepository.findByUsername(user.getUsername()).isPresent()) {
             return ResponseEntity.badRequest()
-                    .body("Username already exists");
+                    .body(Map.of("message", "Username already exists"));
         }
 
         user.setPassword(passwordEncoder.encode(user.getPassword()));

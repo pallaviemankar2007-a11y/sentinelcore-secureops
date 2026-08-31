@@ -3,12 +3,9 @@
 // .env file to point at the deployed backend instead.
 const BASE = import.meta.env.VITE_API_BASE_URL || '';
 
-// Once Person B's auth lands and login works, every request should carry
-// the JWT so protected endpoints accept it. Reads from localStorage so the
-// session survives a page refresh — safe to do here since this is a real
-// deployed app, not a sandboxed preview.
+// Reads token from localStorage so every request carries JWT for protected endpoints
 function authHeaders() {
-  const token = localStorage.getItem('sentinelcore_token');
+  const token = localStorage.getItem('token') || localStorage.getItem('sentinelcore_token');
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
@@ -19,7 +16,7 @@ async function handleResponse(res) {
       const body = await res.text();
       if (body) message = body;
     } catch {
-      // ignore — fall back to the status-based message above
+      // ignore — fall back to status-based message
     }
     throw new Error(message);
   }
@@ -34,12 +31,16 @@ export async function checkHealth() {
 }
 
 export async function getAssets() {
-  const res = await fetch(`${BASE}/api/assets`, { headers: { ...authHeaders() } });
+  const res = await fetch(`${BASE}/api/assets`, {
+    headers: { ...authHeaders() }
+  });
   return handleResponse(res);
 }
 
 export async function getAsset(assetId) {
-  const res = await fetch(`${BASE}/api/assets/${assetId}`, { headers: { ...authHeaders() } });
+  const res = await fetch(`${BASE}/api/assets/${assetId}`, {
+    headers: { ...authHeaders() }
+  });
   return handleResponse(res);
 }
 
@@ -62,12 +63,13 @@ export async function updateAsset(assetId, asset) {
 }
 
 export async function deleteAsset(assetId) {
-  const res = await fetch(`${BASE}/api/assets/${assetId}`, { method: 'DELETE', headers: { ...authHeaders() } });
+  const res = await fetch(`${BASE}/api/assets/${assetId}`, {
+    method: 'DELETE',
+    headers: { ...authHeaders() }
+  });
   return handleResponse(res);
 }
 
-// Matches MonitoringController: PUT /api/monitoring/{assetId}?cpuUsage=&memoryUsage=&diskUsage=&networkUsage=
-// Note these are query params on the real backend, not a JSON body.
 export async function updateMetrics(assetId, { cpuUsage, memoryUsage, diskUsage, networkUsage }) {
   const params = new URLSearchParams({
     cpuUsage: String(cpuUsage),

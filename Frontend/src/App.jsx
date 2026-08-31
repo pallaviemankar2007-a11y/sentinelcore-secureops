@@ -5,11 +5,17 @@ import Sidebar from './components/Sidebar';
 import Topbar from './components/Topbar';
 import Dashboard from './components/Dashboard';
 import AssetsPage from './components/AssetsPage';
+import CloudMonitoringPage from './components/CloudMonitoringPage';
+import NetworkMonitoringPage from './components/NetworkMonitoringPage';
+import AlertsPage from './components/AlertsPage';
 import AuthPage from './pages/AuthPage';
 
 const PAGE_META = {
   dashboard: { title: 'Dashboard', subtitle: "Here's the current state of your infrastructure." },
   assets: { title: 'Assets', subtitle: 'Servers, cloud resources, and network devices under watch.' },
+  cloud: { title: 'Cloud Monitoring', subtitle: 'Health of your cloud-type assets.' },
+  network: { title: 'Network Monitoring', subtitle: 'Health of your network-type assets.' },
+  alerts: { title: 'Alerts', subtitle: 'Assets currently in warning or critical status.' },
 };
 
 export default function App() {
@@ -69,10 +75,10 @@ export default function App() {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#0B1220' }}>
-      <Sidebar active={view} onNavigate={setView} />
+      <Sidebar active={view} onNavigate={setView} onLogout={handleLogout} />
 
       <div style={{ flex: 1, minWidth: 0 }}>
-        <Topbar title={meta.title} subtitle={meta.subtitle} backendUp={backendUp} lastSync={lastSync} user={user} onLogout={handleLogout} />
+        <Topbar title={meta.title} subtitle={meta.subtitle} backendUp={backendUp} lastSync={lastSync} user={user} />
 
         <div style={{ maxWidth: 1080, padding: '24px 28px 60px' }}>
           {view === 'dashboard' && (
@@ -87,6 +93,15 @@ export default function App() {
               onReload={() => loadAssets(true)}
               showToast={showToast}
             />
+          )}
+          {view === 'cloud' && (
+            <CloudMonitoringPage assets={assets} onGoToAssets={() => setView('assets')} />
+          )}
+          {view === 'network' && (
+            <NetworkMonitoringPage assets={assets} onGoToAssets={() => setView('assets')} />
+          )}
+          {view === 'alerts' && (
+            <AlertsPage assets={assets} onGoToAssets={() => setView('assets')} />
           )}
         </div>
       </div>

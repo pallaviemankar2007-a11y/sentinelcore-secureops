@@ -1,7 +1,8 @@
 import { Server, ShieldCheck, AlertTriangle, ShieldAlert } from 'lucide-react';
 import StatCard from './StatCard';
 import { StatusPieChart, TypeBarChart } from './AssetCharts';
-
+import MetricsOverview from './MetricsOverview';
+import AlertsPanel from './AlertsPanel';
 
 export default function Dashboard({ assets, counts, uptimePct, onGoToAssets }) {
   const recent = [...assets]
@@ -16,15 +17,25 @@ export default function Dashboard({ assets, counts, uptimePct, onGoToAssets }) {
         <StatCard label="Warning" value={counts.WARNING} sub="Worth a look" icon={AlertTriangle} accent="#F5A623" />
         <StatCard label="Critical" value={counts.CRITICAL} sub="Needs attention" icon={ShieldAlert} accent="#F0455D" />
       </div>
-<div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', marginBottom: 20 }}>
-  <ChartCard title="Status distribution">
-    <StatusPieChart counts={counts} />
-  </ChartCard>
-  <ChartCard title="Assets by type">
-    <TypeBarChart assets={assets} />
-  </ChartCard>
-        
-</div>
+
+      <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', marginBottom: 20 }}>
+        <ChartCard title="Status distribution">
+          <StatusPieChart counts={counts} />
+        </ChartCard>
+        <ChartCard title="Assets by type">
+          <TypeBarChart assets={assets} />
+        </ChartCard>
+      </div>
+
+      <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', marginBottom: 20 }}>
+        <div style={{ flex: '1 1 320px' }}>
+          <MetricsOverview assets={assets} />
+        </div>
+        <div style={{ flex: '1 1 320px' }}>
+          <AlertsPanel assets={assets} />
+        </div>
+      </div>
+
       <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start', flexWrap: 'wrap' }}>
         <div style={{ flex: '1 1 260px', background: '#0F1830', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, padding: 20 }}>
           <div style={{ fontSize: 12, fontWeight: 600, color: '#8B98B0', marginBottom: 4 }}>Estimated uptime</div>
@@ -64,6 +75,7 @@ function statusText(status) {
   if (status === 'WARNING') return '#FBC96D';
   return '#F87E92';
 }
+
 function ChartCard({ title, children }) {
   return (
     <div style={{ flex: '1 1 320px', background: '#0F1830', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, padding: 18 }}>

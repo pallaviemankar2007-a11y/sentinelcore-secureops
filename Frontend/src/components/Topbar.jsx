@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { WifiOff, LogOut } from 'lucide-react';
+import { WifiOff } from 'lucide-react';
 
-export default function Topbar({ title, subtitle, backendUp, lastSync, user, onLogout }) {
+export default function Topbar({ title, subtitle, backendUp, lastSync, user }) {
   const [now, setNow] = useState(new Date());
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 1000);
@@ -20,13 +20,14 @@ export default function Topbar({ title, subtitle, backendUp, lastSync, user, onL
           {now.toLocaleTimeString()}
         </div>
         {user && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div title={user.role} style={{ width: 30, height: 30, borderRadius: '50%', background: 'rgba(108,140,255,0.15)', border: '1px solid rgba(108,140,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 600, color: '#A3B4FF' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'rgba(108,140,255,0.15)', border: '1px solid rgba(108,140,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12.5, fontWeight: 700, color: '#A3B4FF', flexShrink: 0 }}>
               {user.username?.[0]?.toUpperCase() || '?'}
             </div>
-            <button onClick={onLogout} title="Log out" style={{ background: 'none', border: 'none', color: '#5B6684', display: 'flex', padding: 4 }}>
-              <LogOut size={15} />
-            </button>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: '#E2E8F0', lineHeight: 1.2 }}>{user.username}</div>
+              <div style={{ fontSize: 11, color: '#5B6684', lineHeight: 1.2 }}>{user.role}</div>
+            </div>
           </div>
         )}
       </div>

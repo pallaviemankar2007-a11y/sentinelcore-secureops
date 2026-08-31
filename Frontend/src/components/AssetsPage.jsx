@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Server, Cloud, Network, Search, Plus, Pencil, Trash2, Zap, Activity, WifiOff } from 'lucide-react';
 import * as api from '../api/assets';
 import AssetFormModal from './AssetFormModal';
@@ -16,6 +16,8 @@ const typeIcon = { SERVER: Server, CLOUD: Cloud, NETWORK: Network };
 export default function AssetsPage({ assets, counts, loading, loadError, onReload, showToast }) {
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 5;
   const [formOpen, setFormOpen] = useState(false);
   const [editingAsset, setEditingAsset] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -29,6 +31,17 @@ export default function AssetsPage({ assets, counts, loading, loadError, onReloa
       .filter((a) => a.name.toLowerCase().includes(search.toLowerCase()))
       .sort((a, b) => (STATUS_WEIGHT[a.status] ?? 3) - (STATUS_WEIGHT[b.status] ?? 3));
   }, [assets, filter, search]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+
+  useEffect(() => {
+    setPage(1);
+  }, [filter, search]);
+
+  const paginated = useMemo(() => {
+    const start = (page - 1) * PAGE_SIZE;
+    return filtered.slice(start, start + PAGE_SIZE);
+  }, [filtered, page]);
 
   function openCreate() { setEditingAsset(null); setFormOpen(true); }
   function openEdit(asset) { setEditingAsset(asset); setFormOpen(true); }
@@ -145,13 +158,13 @@ export default function AssetsPage({ assets, counts, loading, loadError, onReloa
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
             <thead>
               <tr style={{ background: '#0F1830', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                {['Asset', 'Type', 'Status', 'CPU load', 'Last checked', ''].map((h) => (
-                  <th key={h} style={{ textAlign: 'left', padding: '10px 16px', fontSize: 10.5, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#5B6684', fontWeight: 500 }}>{h}</th>
+                {['Asset', 'Type', 'Status', 'CPU', 'Memory', 'Disk', 'Network', 'Last checked', ''].map((h) => (
+                  <th key={h} style={{ textAlign: 'left', padding: '10px 14px', fontSize: 10.5, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#5B6684', fontWeight: 500 }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {filtered.map((a) => {
+              {paginated.map((a) => {
                 const Icon = typeIcon[a.type] || Server;
                 const c = statusColor[a.status] || statusColor.HEALTHY;
                 return (
@@ -168,18 +181,14 @@ export default function AssetsPage({ assets, counts, loading, loadError, onReloa
                         <span style={{ width: 6, height: 6, borderRadius: '50%', background: c.dot }} /> {a.status}
                       </span>
                     </td>
-                    <td style={{ padding: '11px 16px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <div style={{ width: 72, height: 6, borderRadius: 3, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
-                          <div style={{ height: '100%', borderRadius: 3, background: c.dot, width: `${Math.min(a.cpuUsage ?? 0, 100)}%` }} />
-                        </div>
-                        <span className="mono" style={{ fontSize: 11, color: '#5B6684' }}>{a.cpuUsage ?? 0}%</span>
-                      </div>
-                    </td>
-                    <td className="mono" style={{ padding: '11px 16px', fontSize: 11, color: '#5B6684' }}>
+                    <td style={{ padding: '11px 14px' }}><MiniMetric value={a.cpuUsage} color={c.dot} /></td>
+                    <td style={{ padding: '11px 14px' }}><MiniMetric value={a.memoryUsage} color="#6C8CFF" /></td>
+                    <td style={{ padding: '11px 14px' }}><MiniMetric value={a.diskUsage} color="#FBC96D" /></td>
+                    <td style={{ padding: '11px 14px' }}><MiniMetric value={a.networkUsage} color="#5EEAD4" /></td>
+                    <td className="mono" style={{ padding: '11px 14px', fontSize: 11, color: '#5B6684' }}>
                       {a.lastCheckedAt ? new Date(a.lastCheckedAt).toLocaleString() : '—'}
                     </td>
-                    <td style={{ padding: '11px 16px' }}>
+                    <td style={{ padding: '11px 14px' }}>
                       <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
                         <IconButton onClick={() => setMetricsTarget(a)} title="Update metrics"><Zap size={13} /></IconButton>
                         <IconButton onClick={() => openEdit(a)} title="Edit"><Pencil size={13} /></IconButton>
@@ -194,6 +203,10 @@ export default function AssetsPage({ assets, counts, loading, loadError, onReloa
         </div>
       )}
 
+      {!loading && filtered.length > PAGE_SIZE && (
+       <Pagination page={page} totalPages={totalPages} totalItems={filtered.length} onChange={setPage} />
+      )}
+
       {formOpen && (
         <AssetFormModal initialAsset={editingAsset} submitting={saving} onClose={() => setFormOpen(false)} onSubmit={handleSubmit} />
       )}
@@ -204,6 +217,58 @@ export default function AssetsPage({ assets, counts, loading, loadError, onReloa
       {metricsTarget && (
         <MetricsModal asset={metricsTarget} submitting={updatingMetrics} onClose={() => setMetricsTarget(null)} onSubmit={handleMetricsSubmit} />
       )}
+    </div>
+  );
+}
+
+function Pagination({ page, totalPages, totalItems, onChange }) {
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      marginTop: 14, padding: '12px 16px', borderRadius: 10,
+      border: '1px solid rgba(255,255,255,0.06)', background: '#0F1830',
+    }}>
+      <span style={{ fontSize: 12.5, color: '#8B98B0' }}>
+        Page {page} of {totalPages} · {totalItems} item{totalItems !== 1 ? 's' : ''}
+      </span>
+      <div style={{ display: 'flex', gap: 8 }}>
+        <button
+          onClick={() => onChange(Math.max(1, page - 1))}
+          disabled={page === 1}
+          style={navBtnStyle(page === 1)}
+        >
+          ‹ Prev
+        </button>
+        <button
+          onClick={() => onChange(Math.min(totalPages, page + 1))}
+          disabled={page === totalPages}
+          style={navBtnStyle(page === totalPages)}
+        >
+          Next ›
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function navBtnStyle(disabled) {
+  return {
+    padding: '6px 14px', borderRadius: 7, fontSize: 12.5, fontWeight: 500,
+    border: '1px solid rgba(255,255,255,0.08)',
+    background: 'rgba(255,255,255,0.03)',
+    color: disabled ? '#3E4867' : '#8B98B0',
+    cursor: disabled ? 'default' : 'pointer',
+  };
+}
+
+function MiniMetric({ value, color }) {
+  const v = value ?? 0;
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+      <div style={{ width: 40, height: 5, borderRadius: 3, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
+        <div style={{ height: '100%', borderRadius: 3, background: color, width: `${Math.min(v, 100)}%` }} />
+      </div>
+      <span className="mono" style={{ fontSize: 10.5, color: '#5B6684' }}>{v}%</span>
     </div>
   );
 }

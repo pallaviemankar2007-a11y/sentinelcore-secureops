@@ -5,8 +5,15 @@ const BASE = import.meta.env.VITE_API_BASE_URL || '';
 
 // Reads token from localStorage so every request carries JWT for protected endpoints
 function authHeaders() {
-  const token = localStorage.getItem('token') || localStorage.getItem('sentinelcore_token');
-  return token ? { Authorization: `Bearer ${token}` } : {};
+  let token = localStorage.getItem('sentinelcore_token') || localStorage.getItem('token');
+  if (!token) return {};
+
+  // Strip outer quotes if stored as a raw JSON string
+  token = token.replace(/^"(.*)"$/, '$1').trim();
+
+  return {
+    'Authorization': `Bearer ${token}`
+  };
 }
 
 async function handleResponse(res) {
@@ -45,19 +52,40 @@ export async function getAsset(assetId) {
 }
 
 export async function createAsset(asset) {
+  // Format numeric values and map form fields to match Java entity properties
+  const payload = {
+    name: asset.name,
+    type: asset.type,
+    status: asset.status,
+    cpuUsage: Number(asset.cpuUsage ?? asset.cpu ?? 0),
+    memoryUsage: Number(asset.memoryUsage ?? asset.memory ?? 0),
+    diskUsage: Number(asset.diskUsage ?? asset.disk ?? 0),
+    networkUsage: Number(asset.networkUsage ?? asset.network ?? 0),
+  };
+
   const res = await fetch(`${BASE}/api/assets`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...authHeaders() },
-    body: JSON.stringify(asset),
+    body: JSON.stringify(payload),
   });
   return handleResponse(res);
 }
 
 export async function updateAsset(assetId, asset) {
+  const payload = {
+    name: asset.name,
+    type: asset.type,
+    status: asset.status,
+    cpuUsage: Number(asset.cpuUsage ?? asset.cpu ?? 0),
+    memoryUsage: Number(asset.memoryUsage ?? asset.memory ?? 0),
+    diskUsage: Number(asset.diskUsage ?? asset.disk ?? 0),
+    networkUsage: Number(asset.networkUsage ?? asset.network ?? 0),
+  };
+
   const res = await fetch(`${BASE}/api/assets/${assetId}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...authHeaders() },
-    body: JSON.stringify(asset),
+    body: JSON.stringify(payload),
   });
   return handleResponse(res);
 }

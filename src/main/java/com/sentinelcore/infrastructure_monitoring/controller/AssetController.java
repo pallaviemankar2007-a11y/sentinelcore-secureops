@@ -2,7 +2,7 @@ package com.sentinelcore.infrastructure_monitoring.controller;
 
 import com.sentinelcore.infrastructure_monitoring.domain.Asset;
 import com.sentinelcore.infrastructure_monitoring.service.AssetService;
-
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,6 +11,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/assets")
+@CrossOrigin(origins = "http://localhost:5173")
 public class AssetController {
 
     private final AssetService assetService;
@@ -20,8 +21,15 @@ public class AssetController {
     }
 
     @PostMapping
-    public ResponseEntity<Asset> createAsset(@RequestBody Asset asset) {
-        return ResponseEntity.ok(assetService.createAsset(asset));
+    public ResponseEntity<?> createAsset(@RequestBody Asset asset) {
+        try {
+            Asset created = assetService.createAsset(asset);
+            return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Asset creation error: " + e.getMessage());
+        }
     }
 
     @GetMapping

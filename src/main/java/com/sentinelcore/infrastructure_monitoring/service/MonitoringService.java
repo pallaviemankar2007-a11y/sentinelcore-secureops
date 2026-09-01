@@ -5,7 +5,6 @@ import com.sentinelcore.infrastructure_monitoring.domain.Asset;
 import java.util.UUID;
 
 public interface MonitoringService {
-
     Asset updateMetrics(
             UUID assetId,
             Float cpuUsage,

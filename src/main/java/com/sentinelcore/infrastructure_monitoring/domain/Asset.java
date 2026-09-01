@@ -1,34 +1,39 @@
 package com.sentinelcore.infrastructure_monitoring.domain;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "assets")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class Asset {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(name = "asset_id", updatable = false, nullable = false)
+    private UUID id;
 
+    @Column(nullable = false)
     private String name;
+
     private String type;
     private String status;
-    private Float cpuUsage;
-    private Float memoryUsage;
-    private Float diskUsage;
-    private Float networkUsage;
-    private LocalDateTime lastCheckedAt;
 
-    // Explicit Getters and Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    @Column(name = "cpu_usage")
+    private Float cpuUsage = 0.0f;
+
+    @Column(name = "memory_usage")
+    private Float memoryUsage = 0.0f;
+
+    @Column(name = "disk_usage")
+    private Float diskUsage = 0.0f;
+
+    @Column(name = "network_usage")
+    private Float networkUsage = 0.0f;
+
+    public Asset() {}
+
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
@@ -50,7 +55,4 @@ public class Asset {
 
     public Float getNetworkUsage() { return networkUsage; }
     public void setNetworkUsage(Float networkUsage) { this.networkUsage = networkUsage; }
-
-    public LocalDateTime getLastCheckedAt() { return lastCheckedAt; }
-    public void setLastCheckedAt(LocalDateTime lastCheckedAt) { this.lastCheckedAt = lastCheckedAt; }
 }

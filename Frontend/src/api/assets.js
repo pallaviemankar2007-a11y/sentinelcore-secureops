@@ -98,14 +98,22 @@ export async function deleteAsset(assetId) {
   return handleResponse(res);
 }
 
-export async function updateMetrics(assetId, { cpuUsage, memoryUsage, diskUsage, networkUsage }) {
+export async function updateMetrics(assetId, values = {}) {
+  // Extract values with fallbacks to handle both component key-naming styles
+  const cpu = values.cpuUsage ?? values.cpu ?? 0;
+  const memory = values.memoryUsage ?? values.memory ?? 0;
+  const disk = values.diskUsage ?? values.disk ?? 0;
+  const network = values.networkUsage ?? values.network ?? 0;
+
   const params = new URLSearchParams({
-    cpuUsage: String(cpuUsage),
-    memoryUsage: String(memoryUsage),
-    diskUsage: String(diskUsage),
-    networkUsage: String(networkUsage),
+    cpuUsage: String(cpu),
+    memoryUsage: String(memory),
+    diskUsage: String(disk),
+    networkUsage: String(network),
   });
-  const res = await fetch(`${BASE}/api/monitoring/${assetId}?${params.toString()}`, {
+
+  // Fixed endpoint route: /api/monitoring/metrics/{assetId}
+  const res = await fetch(`${BASE}/api/monitoring/metrics/${assetId}?${params.toString()}`, {
     method: 'PUT',
     headers: { ...authHeaders() },
   });

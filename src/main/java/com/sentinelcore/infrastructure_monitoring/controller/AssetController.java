@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Random;
 import java.util.UUID;
 
 @RestController
@@ -15,6 +16,7 @@ import java.util.UUID;
 public class AssetController {
 
     private final AssetService assetService;
+    private final Random random = new Random();
 
     public AssetController(AssetService assetService) {
         this.assetService = assetService;
@@ -23,6 +25,25 @@ public class AssetController {
     @PostMapping
     public ResponseEntity<?> createAsset(@RequestBody Asset asset) {
         try {
+            // Auto-assign logical initial status if not provided
+            if (asset.getStatus() == null || asset.getStatus().trim().isEmpty()) {
+                asset.setStatus("HEALTHY");
+            }
+
+            // Explicitly cast generated values to float
+            if (asset.getCpuUsage() == null || asset.getCpuUsage() == 0f) {
+                asset.setCpuUsage((float) (10 + random.nextInt(15))); // 10.0f - 24.0f baseline
+            }
+            if (asset.getMemoryUsage() == null || asset.getMemoryUsage() == 0f) {
+                asset.setMemoryUsage((float) (20 + random.nextInt(20))); // 20.0f - 39.0f baseline
+            }
+            if (asset.getDiskUsage() == null || asset.getDiskUsage() == 0f) {
+                asset.setDiskUsage((float) (15 + random.nextInt(10))); // 15.0f - 24.0f baseline
+            }
+            if (asset.getNetworkUsage() == null || asset.getNetworkUsage() == 0f) {
+                asset.setNetworkUsage((float) (5 + random.nextInt(10))); // 5.0f - 14.0f baseline
+            }
+
             Asset created = assetService.createAsset(asset);
             return ResponseEntity.status(HttpStatus.CREATED).body(created);
         } catch (Exception e) {

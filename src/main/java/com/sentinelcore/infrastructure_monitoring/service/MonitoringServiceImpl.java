@@ -26,10 +26,20 @@ public class MonitoringServiceImpl implements MonitoringService {
         Asset asset = assetRepository.findById(assetId)
                 .orElseThrow(() -> new RuntimeException("Asset not found with id: " + assetId));
 
+        // Update metrics
         asset.setCpuUsage(cpuUsage);
         asset.setMemoryUsage(memoryUsage);
         asset.setDiskUsage(diskUsage);
         asset.setNetworkUsage(networkUsage);
+
+        // Dynamic Status Evaluation
+        if (cpuUsage >= 85.0f || memoryUsage >= 85.0f || diskUsage >= 90.0f) {
+            asset.setStatus("CRITICAL");
+        } else if (cpuUsage >= 70.0f || memoryUsage >= 70.0f || diskUsage >= 75.0f) {
+            asset.setStatus("WARNING");
+        } else {
+            asset.setStatus("HEALTHY");
+        }
 
         return assetRepository.save(asset);
     }

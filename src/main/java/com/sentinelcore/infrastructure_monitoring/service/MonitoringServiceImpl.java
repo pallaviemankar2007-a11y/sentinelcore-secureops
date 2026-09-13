@@ -2,10 +2,8 @@ package com.sentinelcore.infrastructure_monitoring.service;
 
 import com.sentinelcore.infrastructure_monitoring.domain.Asset;
 import com.sentinelcore.infrastructure_monitoring.repository.AssetRepository;
-
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
@@ -26,17 +24,18 @@ public class MonitoringServiceImpl implements MonitoringService {
             Float networkUsage) {
 
         Asset asset = assetRepository.findById(assetId)
-                .orElseThrow(() -> new RuntimeException("Asset not found"));
+                .orElseThrow(() -> new RuntimeException("Asset not found with id: " + assetId));
 
+        // Update metrics
         asset.setCpuUsage(cpuUsage);
         asset.setMemoryUsage(memoryUsage);
         asset.setDiskUsage(diskUsage);
         asset.setNetworkUsage(networkUsage);
-        asset.setLastCheckedAt(LocalDateTime.now());
 
-        if (cpuUsage >= 80 || memoryUsage >= 80 || diskUsage >= 80) {
+        // Dynamic Status Evaluation
+        if (cpuUsage >= 85.0f || memoryUsage >= 85.0f || diskUsage >= 90.0f) {
             asset.setStatus("CRITICAL");
-        } else if (cpuUsage >= 60 || memoryUsage >= 60 || diskUsage >= 60) {
+        } else if (cpuUsage >= 70.0f || memoryUsage >= 70.0f || diskUsage >= 75.0f) {
             asset.setStatus("WARNING");
         } else {
             asset.setStatus("HEALTHY");

@@ -2,7 +2,6 @@ package com.sentinelcore.infrastructure_monitoring.controller;
 
 import com.sentinelcore.infrastructure_monitoring.domain.Asset;
 import com.sentinelcore.infrastructure_monitoring.service.MonitoringService;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -10,6 +9,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/monitoring")
+@CrossOrigin(origins = "http://localhost:5173")
 public class MonitoringController {
 
     private final MonitoringService monitoringService;
@@ -18,7 +18,7 @@ public class MonitoringController {
         this.monitoringService = monitoringService;
     }
 
-    @PutMapping("/{assetId}")
+    @PutMapping("/metrics/{assetId}")
     public ResponseEntity<Asset> updateMetrics(
             @PathVariable UUID assetId,
             @RequestParam Float cpuUsage,
@@ -27,13 +27,7 @@ public class MonitoringController {
             @RequestParam Float networkUsage) {
 
         return ResponseEntity.ok(
-                monitoringService.updateMetrics(
-                        assetId,
-                        cpuUsage,
-                        memoryUsage,
-                        diskUsage,
-                        networkUsage
-                )
+                monitoringService.updateMetrics(assetId, cpuUsage, memoryUsage, diskUsage, networkUsage)
         );
     }
 }

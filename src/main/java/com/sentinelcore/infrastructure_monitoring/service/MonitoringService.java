@@ -1,7 +1,6 @@
 package com.sentinelcore.infrastructure_monitoring.service;
 
 import com.sentinelcore.infrastructure_monitoring.domain.Asset;
-
 import java.util.UUID;
 
 public interface MonitoringService {

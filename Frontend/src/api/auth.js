@@ -1,10 +1,9 @@
-// Matches the auth API contract Person B's backend will expose:
-//   POST /api/auth/signup  { username, email, password, role? } -> { token, username, role }
+// Matches the auth API contract:
+//   POST /api/auth/signup  { username, email, password, role? } -> { message, username }
 //   POST /api/auth/login   { username, password }               -> { token, username, role }
-// Until that's merged, these calls will fail with a clear "backend unreachable"
-// style error — that's expected, not a bug in this code.
 const BASE = import.meta.env.VITE_API_BASE_URL || '';
 const TOKEN_KEY = 'sentinelcore_token';
+const ALT_TOKEN_KEY = 'token';
 const USER_KEY = 'sentinelcore_user';
 
 async function handleResponse(res) {
@@ -14,7 +13,7 @@ async function handleResponse(res) {
       const body = await res.text();
       if (body) message = body;
     } catch {
-      // ignore — fall back to the status-based message above
+      // ignore — fall back to status-based message
     }
     throw new Error(message);
   }
@@ -24,6 +23,7 @@ async function handleResponse(res) {
 function persistSession(data) {
   if (data?.token) {
     localStorage.setItem(TOKEN_KEY, data.token);
+    localStorage.setItem(ALT_TOKEN_KEY, data.token);
     localStorage.setItem(USER_KEY, JSON.stringify({ username: data.username, role: data.role }));
   }
   return data;
@@ -45,26 +45,28 @@ export async function signup({ username, email, password, role }) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username, email, password, role }),
   });
-  const data = await handleResponse(res);
-  return persistSession(data);
+
+  await handleResponse(res);
+
+  // Auto-login after successful registration to receive and store real JWT token
+  return await login(username, password);
 }
 
 export function logout() {
   localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(ALT_TOKEN_KEY);
   localStorage.removeItem(USER_KEY);
 }
 
 export function getToken() {
-  return localStorage.getItem(TOKEN_KEY);
+  return localStorage.getItem(TOKEN_KEY) || localStorage.getItem(ALT_TOKEN_KEY);
 }
 
 export function getUser() {
   const raw = localStorage.getItem(USER_KEY);
   return raw ? JSON.parse(raw) : null;
 }
-// TEMPORARY — dev-only bypass until Person B's real auth endpoints exist.
-// Sets a fake local session so the rest of the app is usable and testable.
-// Remove this function (and its button in AuthPage.jsx) once real login works.
+
 export function devBypassLogin() {
   const fakeData = { token: 'dev-mode-fake-token', username: 'dev-admin', role: 'ADMIN' };
   persistSession(fakeData);

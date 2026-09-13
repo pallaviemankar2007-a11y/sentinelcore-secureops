@@ -3,13 +3,17 @@
 // .env file to point at the deployed backend instead.
 const BASE = import.meta.env.VITE_API_BASE_URL || '';
 
-// Once Person B's auth lands and login works, every request should carry
-// the JWT so protected endpoints accept it. Reads from localStorage so the
-// session survives a page refresh — safe to do here since this is a real
-// deployed app, not a sandboxed preview.
+// Reads token from localStorage so every request carries JWT for protected endpoints
 function authHeaders() {
-  const token = localStorage.getItem('sentinelcore_token');
-  return token ? { Authorization: `Bearer ${token}` } : {};
+  let token = localStorage.getItem('sentinelcore_token') || localStorage.getItem('token');
+  if (!token) return {};
+
+  // Strip outer quotes if stored as a raw JSON string
+  token = token.replace(/^"(.*)"$/, '$1').trim();
+
+  return {
+    'Authorization': `Bearer ${token}`
+  };
 }
 
 async function handleResponse(res) {
@@ -19,7 +23,7 @@ async function handleResponse(res) {
       const body = await res.text();
       if (body) message = body;
     } catch {
-      // ignore — fall back to the status-based message above
+      // ignore — fall back to status-based message
     }
     throw new Error(message);
   }
@@ -34,48 +38,82 @@ export async function checkHealth() {
 }
 
 export async function getAssets() {
-  const res = await fetch(`${BASE}/api/assets`, { headers: { ...authHeaders() } });
+  const res = await fetch(`${BASE}/api/assets`, {
+    headers: { ...authHeaders() }
+  });
   return handleResponse(res);
 }
 
 export async function getAsset(assetId) {
-  const res = await fetch(`${BASE}/api/assets/${assetId}`, { headers: { ...authHeaders() } });
+  const res = await fetch(`${BASE}/api/assets/${assetId}`, {
+    headers: { ...authHeaders() }
+  });
   return handleResponse(res);
 }
 
 export async function createAsset(asset) {
+  // Format numeric values and map form fields to match Java entity properties
+  const payload = {
+    name: asset.name,
+    type: asset.type,
+    status: asset.status,
+    cpuUsage: Number(asset.cpuUsage ?? asset.cpu ?? 0),
+    memoryUsage: Number(asset.memoryUsage ?? asset.memory ?? 0),
+    diskUsage: Number(asset.diskUsage ?? asset.disk ?? 0),
+    networkUsage: Number(asset.networkUsage ?? asset.network ?? 0),
+  };
+
   const res = await fetch(`${BASE}/api/assets`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...authHeaders() },
-    body: JSON.stringify(asset),
+    body: JSON.stringify(payload),
   });
   return handleResponse(res);
 }
 
 export async function updateAsset(assetId, asset) {
+  const payload = {
+    name: asset.name,
+    type: asset.type,
+    status: asset.status,
+    cpuUsage: Number(asset.cpuUsage ?? asset.cpu ?? 0),
+    memoryUsage: Number(asset.memoryUsage ?? asset.memory ?? 0),
+    diskUsage: Number(asset.diskUsage ?? asset.disk ?? 0),
+    networkUsage: Number(asset.networkUsage ?? asset.network ?? 0),
+  };
+
   const res = await fetch(`${BASE}/api/assets/${assetId}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...authHeaders() },
-    body: JSON.stringify(asset),
+    body: JSON.stringify(payload),
   });
   return handleResponse(res);
 }
 
 export async function deleteAsset(assetId) {
-  const res = await fetch(`${BASE}/api/assets/${assetId}`, { method: 'DELETE', headers: { ...authHeaders() } });
+  const res = await fetch(`${BASE}/api/assets/${assetId}`, {
+    method: 'DELETE',
+    headers: { ...authHeaders() }
+  });
   return handleResponse(res);
 }
 
-// Matches MonitoringController: PUT /api/monitoring/{assetId}?cpuUsage=&memoryUsage=&diskUsage=&networkUsage=
-// Note these are query params on the real backend, not a JSON body.
-export async function updateMetrics(assetId, { cpuUsage, memoryUsage, diskUsage, networkUsage }) {
+export async function updateMetrics(assetId, values = {}) {
+  // Extract values with fallbacks to handle both component key-naming styles
+  const cpu = values.cpuUsage ?? values.cpu ?? 0;
+  const memory = values.memoryUsage ?? values.memory ?? 0;
+  const disk = values.diskUsage ?? values.disk ?? 0;
+  const network = values.networkUsage ?? values.network ?? 0;
+
   const params = new URLSearchParams({
-    cpuUsage: String(cpuUsage),
-    memoryUsage: String(memoryUsage),
-    diskUsage: String(diskUsage),
-    networkUsage: String(networkUsage),
+    cpuUsage: String(cpu),
+    memoryUsage: String(memory),
+    diskUsage: String(disk),
+    networkUsage: String(network),
   });
-  const res = await fetch(`${BASE}/api/monitoring/${assetId}?${params.toString()}`, {
+
+  // Fixed endpoint route: /api/monitoring/metrics/{assetId}
+  const res = await fetch(`${BASE}/api/monitoring/metrics/${assetId}?${params.toString()}`, {
     method: 'PUT',
     headers: { ...authHeaders() },
   });

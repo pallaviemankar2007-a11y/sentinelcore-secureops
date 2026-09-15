@@ -1,16 +1,11 @@
 import { useState } from 'react';
-import { ShieldCheck, AlertCircle, Server, Activity, LayoutDashboard } from 'lucide-react';
+import { ShieldCheck, User, Mail, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import * as auth from '../api/auth';
-
-const FEATURES = [
-  { icon: Server, text: 'Full asset inventory — create, edit, retire' },
-  { icon: Activity, text: 'Live health status across servers, cloud, network' },
-  { icon: LayoutDashboard, text: 'One dashboard for the whole fleet' },
-];
 
 export default function AuthPage({ onAuthSuccess }) {
   const [mode, setMode] = useState('login');
   const [form, setForm] = useState({ username: '', email: '', password: '' });
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -39,128 +34,129 @@ export default function AuthPage({ onAuthSuccess }) {
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', background: '#0B1220' }}>
-      {/* Left: branded glow panel */}
       <div style={{
-        flex: '1 1 420px', position: 'relative', overflow: 'hidden',
-        display: 'flex', flexDirection: 'column', justifyContent: 'center',
-        padding: '60px 56px', borderRight: '1px solid rgba(255,255,255,0.06)',
-        minWidth: 340,
-      }}>
-        <div style={{
-          position: 'absolute', top: '-10%', left: '-10%', width: 340, height: 340, borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(108,140,255,0.35), transparent 70%)',
-          filter: 'blur(10px)', animation: 'float-slow 12s ease-in-out infinite',
-        }} />
-        <div style={{
-          position: 'absolute', bottom: '-15%', right: '-5%', width: 300, height: 300, borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(45,212,191,0.25), transparent 70%)',
-          filter: 'blur(10px)', animation: 'float-slow-reverse 14s ease-in-out infinite',
-        }} />
-        <div style={{
-          position: 'absolute', inset: 0,
-          backgroundImage: 'linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px)',
-          backgroundSize: '36px 36px',
-        }} />
+      minHeight: '100vh', width: '100%', display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center', background: '#0B1220',
+      position: 'relative', overflowY: 'auto', overflowX: 'hidden', padding: '48px 24px',
+      boxSizing: 'border-box',
+    }}>
+      {/* Warm-toned-for-them-but-ours glow, centered behind logo + card as one unit */}
+      <div style={{
+        position: 'absolute', top: '8%', left: '50%', transform: 'translateX(-50%)',
+        width: 640, height: 640, borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(108,140,255,0.16), transparent 65%)',
+        filter: 'blur(24px)', pointerEvents: 'none',
+      }} />
 
-        <div style={{ position: 'relative', zIndex: 1, animation: 'fade-up 0.5s ease' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 28 }}>
-            <div style={{ width: 34, height: 34, borderRadius: 9, background: 'rgba(108,140,255,0.15)', border: '1px solid rgba(108,140,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <ShieldCheck size={17} color="#A3B4FF" />
-            </div>
-            <div style={{ fontSize: 15, fontWeight: 600, color: '#E2E8F0' }}>SentinelCore SecureOps</div>
-          </div>
-
-          <h1 style={{ fontSize: 26, fontWeight: 600, color: '#E2E8F0', lineHeight: 1.3, margin: '0 0 12px', maxWidth: 340 }}>
-            Watch your infrastructure, not your inbox.
-          </h1>
-          <p style={{ fontSize: 13.5, color: '#8B98B0', lineHeight: 1.6, margin: '0 0 32px', maxWidth: 320 }}>
-            One place to track every server, cloud resource, and network device you're responsible for.
-          </p>
-
-          {FEATURES.map((f, i) => {
-            const Icon = f.icon;
-            return (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-                <div style={{ width: 26, height: 26, borderRadius: 7, background: 'rgba(45,212,191,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <Icon size={13} color="#5EEAD4" />
-                </div>
-                <span style={{ fontSize: 12.5, color: '#8B98B0' }}>{f.text}</span>
-              </div>
-            );
-          })}
+      {/* Logo + brand, above the card */}
+      <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 32, animation: 'fade-up 0.5s ease' }}>
+        <div style={{
+          width: 56, height: 56, borderRadius: 15, background: 'rgba(108,140,255,0.15)',
+          border: '1px solid rgba(108,140,255,0.35)', display: 'flex', alignItems: 'center',
+          justifyContent: 'center', marginBottom: 14,
+        }}>
+          <ShieldCheck size={28} color="#A3B4FF" />
+        </div>
+        <div style={{ fontSize: 25, fontWeight: 800, color: '#F8FAFC', letterSpacing: '-0.01em' }}>
+          SentinelCore SecureOps
+        </div>
+        <div style={{ fontSize: 13, color: '#8B98B0', marginTop: 4 }}>
+          Infrastructure Monitoring
         </div>
       </div>
 
-      {/* Right: form */}
-      <div style={{ flex: '1 1 420px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-        <div style={{ width: 360, maxWidth: '100%', animation: 'fade-up 0.5s ease 0.1s both' }}>
-          <div style={{ marginBottom: 24 }}>
-            <div style={{ fontSize: 18, fontWeight: 600, color: '#E2E8F0' }}>
-              {mode === 'login' ? 'Welcome back' : 'Create your account'}
-            </div>
-            <div style={{ fontSize: 12.5, color: '#5B6684', marginTop: 3 }}>
-              {mode === 'login' ? 'Log in to keep watching your fleet.' : 'Set up access to the monitoring dashboard.'}
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', marginBottom: 20, background: 'rgba(255,255,255,0.04)', borderRadius: 8, padding: 3 }}>
-            {['login', 'signup'].map((m) => (
-              <button
-                key={m}
-                type="button"
-                onClick={() => { setMode(m); setError(''); }}
-                style={{
-                  flex: 1, padding: '7px 0', borderRadius: 6, border: 'none', fontSize: 12.5, fontWeight: 600,
-                  background: mode === m ? '#6C8CFF' : 'transparent',
-                  color: mode === m ? '#0B1220' : '#8B98B0',
-                  textTransform: 'capitalize', transition: 'background 0.15s ease',
-                }}
-              >
-                {m === 'login' ? 'Log in' : 'Sign up'}
-              </button>
-            ))}
-          </div>
-
-          <form onSubmit={handleSubmit}>
-            <Field label="Username">
-              <input autoFocus value={form.username} onChange={(e) => update('username', e.target.value)} style={inputStyle} />
-            </Field>
-
-            {mode === 'signup' && (
-              <Field label="Email">
-                <input type="email" value={form.email} onChange={(e) => update('email', e.target.value)} style={inputStyle} />
-              </Field>
-            )}
-
-            <Field label="Password">
-              <input type="password" value={form.password} onChange={(e) => update('password', e.target.value)} style={inputStyle} />
-            </Field>
-
-            {error && (
-              <div style={{ display: 'flex', gap: 6, alignItems: 'flex-start', fontSize: 12, color: '#F87E92', margin: '4px 0 12px' }}>
-                <AlertCircle size={13} style={{ flexShrink: 0, marginTop: 1 }} />
-                <span>{error}</span>
-              </div>
-            )}
-
-            <button type="submit" disabled={loading} style={submitBtnStyle}>
-              {loading ? (mode === 'login' ? 'Logging in…' : 'Creating account…') : (mode === 'login' ? 'Log in' : 'Create account')}
-            </button>
-          </form>
-
-          <button
-            type="button"
-            onClick={() => onAuthSuccess(auth.devBypassLogin())}
-            style={devBtnStyle}
-          >
-            ⚠ Skip login (dev mode) — remove before submission
-          </button>
-
-          <p style={{ textAlign: 'center', fontSize: 11, color: '#3E4867', marginTop: 20 }}>
-            Infosys Springboard 7.0 · Milestone 1
-          </p>
+      {/* Card */}
+      <div style={{
+        position: 'relative', zIndex: 1, width: 440, maxWidth: '100%',
+        background: '#141F3D', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 18,
+        padding: '36px 38px', boxShadow: '0 24px 70px rgba(0,0,0,0.4)',
+        animation: 'fade-up 0.5s ease 0.08s both',
+      }}>
+        <div style={{ fontSize: 24, fontWeight: 800, color: '#F8FAFC', marginBottom: 24, letterSpacing: '-0.01em' }}>
+          {mode === 'login' ? 'Sign in to your account' : 'Create your account'}
         </div>
+
+        <div style={{ display: 'flex', marginBottom: 24, background: 'rgba(255,255,255,0.05)', borderRadius: 10, padding: 4 }}>
+          {['login', 'signup'].map((m) => (
+            <button
+              key={m}
+              type="button"
+              onClick={() => { setMode(m); setError(''); }}
+              style={{
+                flex: 1, padding: '9px 0', borderRadius: 8, border: 'none', fontSize: 13, fontWeight: 700,
+                background: mode === m ? '#6C8CFF' : 'transparent',
+                color: mode === m ? '#0B1220' : '#9AA6C0',
+                textTransform: 'capitalize', cursor: 'pointer',
+              }}
+            >
+              {m === 'login' ? 'Log in' : 'Sign up'}
+            </button>
+          ))}
+        </div>
+
+        <form onSubmit={handleSubmit}>
+          <Field label="Username">
+            <IconInput
+              icon={User}
+              autoFocus
+              value={form.username}
+              onChange={(e) => update('username', e.target.value)}
+              placeholder="e.g. admin"
+            />
+          </Field>
+
+          {mode === 'signup' && (
+            <Field label="Email">
+              <IconInput
+                icon={Mail}
+                type="email"
+                value={form.email}
+                onChange={(e) => update('email', e.target.value)}
+                placeholder="you@example.com"
+              />
+            </Field>
+          )}
+
+          <Field label="Password">
+            <div style={{ position: 'relative' }}>
+              <IconInput
+                icon={Lock}
+                type={showPassword ? 'text' : 'password'}
+                value={form.password}
+                onChange={(e) => update('password', e.target.value)}
+                placeholder="Enter your password"
+                trailingPadding
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                style={eyeBtnStyle}
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+          </Field>
+
+          {error && (
+            <div style={{ display: 'flex', gap: 6, alignItems: 'flex-start', fontSize: 12.5, color: '#F87E92', margin: '4px 0 16px' }}>
+              <AlertCircle size={14} style={{ flexShrink: 0, marginTop: 1 }} />
+              <span>{error}</span>
+            </div>
+          )}
+
+          <button type="submit" disabled={loading} style={submitBtnStyle}>
+            {loading ? (mode === 'login' ? 'Signing in…' : 'Creating account…') : (mode === 'login' ? 'Sign In' : 'Create account')}
+          </button>
+        </form>
+
+        <button
+          type="button"
+          onClick={() => onAuthSuccess(auth.devBypassLogin())}
+          style={devBtnStyle}
+        >
+          ⚠ Skip login (dev mode) — remove before submission
+        </button>
       </div>
     </div>
   );
@@ -168,8 +164,8 @@ export default function AuthPage({ onAuthSuccess }) {
 
 function Field({ label, children }) {
   return (
-    <div style={{ marginBottom: 14 }}>
-      <label style={{ display: 'block', fontSize: 11, color: '#8B98B0', marginBottom: 5, textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+    <div style={{ marginBottom: 18 }}>
+      <label style={{ display: 'block', fontSize: 13, color: '#C3D0FF', marginBottom: 8, fontWeight: 600 }}>
         {label}
       </label>
       {children}
@@ -177,15 +173,32 @@ function Field({ label, children }) {
   );
 }
 
-const inputStyle = {
-  width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)',
-  borderRadius: 6, padding: '9px 11px', color: '#E2E8F0', fontSize: 13, outline: 'none',
+function IconInput({ icon: Icon, trailingPadding, ...props }) {
+  return (
+    <div style={{ position: 'relative' }}>
+      <Icon size={17} color="#5B6684" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }} />
+      <input
+        {...props}
+        style={{
+          width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)',
+          borderRadius: 9, padding: `12px ${trailingPadding ? 42 : 14}px 12px 42px`,
+          color: '#F1F5F9', fontSize: 14, outline: 'none', boxSizing: 'border-box',
+        }}
+      />
+    </div>
+  );
+}
+
+const eyeBtnStyle = {
+  position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
+  background: 'none', border: 'none', color: '#5B6684', display: 'flex', cursor: 'pointer', padding: 4,
 };
 const submitBtnStyle = {
-  width: '100%', background: '#6C8CFF', color: '#0B1220', border: 'none', borderRadius: 7,
-  padding: '10px 0', fontSize: 13, fontWeight: 600, marginTop: 4,
+  width: '100%', background: '#6C8CFF', color: '#0B1220', border: 'none', borderRadius: 10,
+  padding: '13px 0', fontSize: 15, fontWeight: 700, marginTop: 6, cursor: 'pointer',
+  boxShadow: '0 8px 24px rgba(108,140,255,0.25)',
 };
 const devBtnStyle = {
   width: '100%', background: 'transparent', color: '#5B6684', border: '1px dashed rgba(255,255,255,0.15)',
-  borderRadius: 7, padding: '8px 0', fontSize: 11.5, marginTop: 10, cursor: 'pointer',
+  borderRadius: 8, padding: '10px 0', fontSize: 11.5, marginTop: 16, cursor: 'pointer',
 };

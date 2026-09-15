@@ -93,7 +93,7 @@ export default function App() {
         <div style={{ flex: 1, minWidth: 0 }}>
           <Topbar title={meta.title} subtitle={meta.subtitle} backendUp={backendUp} lastSync={lastSync} user={user} />
 
-          <div style={{ maxWidth: 1080, padding: '24px 28px 60px' }}>
+          <div style={{ padding: '24px 28px 60px' }}>
             {view === 'dashboard' && (
                 <Dashboard assets={assets} counts={counts} uptimePct={uptimePct} onGoToAssets={() => setView('assets')} />
             )}

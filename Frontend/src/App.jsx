@@ -1,142 +1,484 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
-import * as api from './api/assets';
-import * as auth from './api/auth';
-import Sidebar from './components/Sidebar';
-import Topbar from './components/Topbar';
-import Dashboard from './components/Dashboard';
-import AssetsPage from './components/AssetsPage';
-import CloudMonitoringPage from './components/CloudMonitoringPage';
-import NetworkMonitoringPage from './components/NetworkMonitoringPage';
-import AlertsPage from './components/AlertsPage';
-import AuthPage from './pages/AuthPage';
+import { useState, useEffect, useMemo, useCallback } from "react";
+import * as api from "./api/assets";
+import * as auth from "./api/auth";
 
-import Incidents from './pages/Incidents';
-import Vulnerabilities from './pages/Vulnerabilities';
-import AuditLogs from './pages/AuditLogs';
-import Compliance from './pages/Compliance';
-import UsersPage from './pages/UsersPage';
-import ReportsPage from './pages/ReportsPage';
+import Sidebar from "./components/Sidebar";
+import Topbar from "./components/Topbar";
+
+import Dashboard from "./components/Dashboard";
+import AssetsPage from "./components/AssetsPage";
+import CloudMonitoringPage from "./components/CloudMonitoringPage";
+import NetworkMonitoringPage from "./components/NetworkMonitoringPage";
+import AlertsPage from "./components/AlertsPage";
+
+import AuthPage from "./pages/AuthPage";
+import Incidents from "./pages/Incidents";
+import Vulnerabilities from "./pages/Vulnerabilities";
+import AuditLogs from "./pages/AuditLogs";
+import Compliance from "./pages/Compliance";
+import UsersPage from "./pages/UsersPage";
+import ReportsPage from "./pages/ReportsPage";
+
+/* =========================================================
+   PAGE INFORMATION
+   ========================================================= */
 
 const PAGE_META = {
-  dashboard: { title: 'Dashboard', subtitle: "Here's the current state of your infrastructure." },
-  assets: { title: 'Assets', subtitle: 'Servers, cloud resources, and network devices under watch.' },
-  cloud: { title: 'Cloud Monitoring', subtitle: 'Health of your cloud-type assets.' },
-  network: { title: 'Network Monitoring', subtitle: 'Health of your network-type assets.' },
-  alerts: { title: 'Alerts', subtitle: 'Assets currently in warning or critical status.' },
-  incidents: { title: 'Incidents Management', subtitle: 'Track and manage security and infrastructure tickets.' },
-  vulnerabilities: { title: 'Vulnerabilities', subtitle: 'Identified CVE exposure and patch tracking.' },
-  audit: { title: 'Audit Logs', subtitle: 'Immutable access and action event monitoring.' },
-  compliance: { title: 'Compliance Standards', subtitle: 'Automated compliance benchmark verification.' },
-  users: { title: 'Users & Permissions', subtitle: 'Manage system users and access roles.' },
-  reports: { title: 'System Reports', subtitle: 'Download generated compliance and audit reports.' },
+  dashboard: {
+    title: "Dashboard",
+    subtitle: "Monitor your infrastructure and security environment.",
+  },
+
+  assets: {
+    title: "Assets",
+    subtitle: "Servers, cloud resources, and network devices under monitoring.",
+  },
+
+  cloud: {
+    title: "Cloud Monitoring",
+    subtitle: "Monitor the health and performance of your cloud resources.",
+  },
+
+  network: {
+    title: "Network Monitoring",
+    subtitle: "Monitor network health, traffic, and device performance.",
+  },
+
+  alerts: {
+    title: "Alerts",
+    subtitle: "Review infrastructure events that need attention.",
+  },
+
+  incidents: {
+    title: "Incidents",
+    subtitle: "Track and manage security and infrastructure incidents.",
+  },
+
+  vulnerabilities: {
+    title: "Vulnerabilities",
+    subtitle: "Identify security exposure and track remediation.",
+  },
+
+  audit: {
+    title: "Audit Logs",
+    subtitle: "Monitor system access and security activity.",
+  },
+
+  compliance: {
+    title: "Compliance",
+    subtitle: "Monitor compliance checks and security standards.",
+  },
+
+  users: {
+    title: "Users",
+    subtitle: "Manage users, roles, and system permissions.",
+  },
+
+  reports: {
+    title: "Reports",
+    subtitle: "View and download generated system reports.",
+  },
 };
 
+/* =========================================================
+   MAIN APPLICATION
+   ========================================================= */
+
 export default function App() {
+  /* =======================================================
+     AUTHENTICATED USER
+  ======================================================= */
+
   const [user, setUser] = useState(() => auth.getUser());
-  const [view, setView] = useState('dashboard');
+
+  /* =======================================================
+     CURRENT PAGE
+  ======================================================= */
+
+  const [view, setView] = useState("dashboard");
+
+  /* =======================================================
+     ASSETS
+  ======================================================= */
+
   const [assets, setAssets] = useState([]);
+
   const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState('');
+
+  const [loadError, setLoadError] = useState("");
+
+  /* =======================================================
+     BACKEND STATUS
+  ======================================================= */
+
   const [backendUp, setBackendUp] = useState(null);
+
   const [lastSync, setLastSync] = useState(null);
+
+  /* =======================================================
+     TOAST
+  ======================================================= */
+
   const [toast, setToast] = useState(null);
 
-  const showToast = useCallback((message, type = 'success') => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3000);
+  /* =======================================================
+     TOAST FUNCTION
+  ======================================================= */
+
+  const showToast = useCallback((message, type = "success") => {
+    setToast({
+      message,
+      type,
+    });
+
+    setTimeout(() => {
+      setToast(null);
+    }, 3000);
   }, []);
 
+  /* =======================================================
+     LOAD ASSETS
+  ======================================================= */
+
   const loadAssets = useCallback(async (silent = false) => {
-    if (!silent) setLoading(true);
+    if (!silent) {
+      setLoading(true);
+    }
+
     try {
       const data = await api.getAssets();
+
       setAssets(data);
-      setLoadError('');
+
+      setLoadError("");
+
       setBackendUp(true);
+
       setLastSync(new Date());
     } catch (err) {
-      setLoadError(err.message || 'Could not reach the backend.');
+      setLoadError(err.message || "Could not reach the backend.");
+
       setBackendUp(false);
     } finally {
-      if (!silent) setLoading(false);
+      if (!silent) {
+        setLoading(false);
+      }
     }
   }, []);
 
+  /* =======================================================
+     AUTO REFRESH
+  ======================================================= */
+
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      return;
+    }
+
     loadAssets();
-    const interval = setInterval(() => loadAssets(true), 15000);
-    return () => clearInterval(interval);
+
+    const interval = setInterval(() => {
+      loadAssets(true);
+    }, 15000);
+
+    return () => {
+      clearInterval(interval);
+    };
   }, [loadAssets, user]);
 
-  const counts = useMemo(() => (
-      assets.reduce((acc, a) => ({ ...acc, [a.status]: (acc[a.status] || 0) + 1 }), { HEALTHY: 0, WARNING: 0, CRITICAL: 0 })
-  ), [assets]);
+  /* =======================================================
+     ASSET COUNTS
+  ======================================================= */
 
-  const uptimePct = assets.length ? (100 - counts.CRITICAL * 1.4 - counts.WARNING * 0.3).toFixed(2) : '—';
+  const counts = useMemo(
+    () =>
+      assets.reduce(
+        (acc, asset) => ({
+          ...acc,
+          [asset.status]: (acc[asset.status] || 0) + 1,
+        }),
+        {
+          HEALTHY: 0,
+          WARNING: 0,
+          CRITICAL: 0,
+        },
+      ),
+    [assets],
+  );
+
+  /* =======================================================
+     UPTIME
+  ======================================================= */
+
+  const uptimePct = assets.length
+    ? (100 - counts.CRITICAL * 1.4 - counts.WARNING * 0.3).toFixed(2)
+    : "—";
+
+  /* =======================================================
+     AUTHENTICATION
+  ======================================================= */
 
   if (!user) {
     return <AuthPage onAuthSuccess={setUser} />;
   }
 
+  /* =======================================================
+     PAGE META
+  ======================================================= */
+
   const meta = PAGE_META[view] || PAGE_META.dashboard;
+
+  /* =======================================================
+     LOGOUT
+  ======================================================= */
 
   function handleLogout() {
     auth.logout();
     setUser(null);
   }
 
+  /* =======================================================
+     APPLICATION UI
+  ======================================================= */
+
   return (
-      <div style={{ display: 'flex', minHeight: '100vh', background: '#0B1220' }}>
-        <Sidebar active={view} onNavigate={setView} onLogout={handleLogout} />
+    <div
+      style={{
+        width: "100%",
+        minHeight: "100vh",
 
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <Topbar title={meta.title} subtitle={meta.subtitle} backendUp={backendUp} lastSync={lastSync} user={user} />
+        background: "#F8FAFC",
+        color: "#0F172A",
+      }}
+    >
+      {/* =================================================
+          SIDEBAR
+      ================================================= */}
 
-          <div style={{ maxWidth: 1080, padding: '24px 28px 60px' }}>
-            {view === 'dashboard' && (
-                <Dashboard assets={assets} counts={counts} uptimePct={uptimePct} onGoToAssets={() => setView('assets')} />
-            )}
-            {view === 'assets' && (
-                <AssetsPage
-                    assets={assets}
-                    counts={counts}
-                    loading={loading}
-                    loadError={loadError}
-                    onReload={() => loadAssets(true)}
-                    showToast={showToast}
-                />
-            )}
-            {view === 'cloud' && (
-                <CloudMonitoringPage assets={assets} onGoToAssets={() => setView('assets')} />
-            )}
-            {view === 'network' && (
-                <NetworkMonitoringPage assets={assets} onGoToAssets={() => setView('assets')} />
-            )}
-            {view === 'alerts' && (
-                <AlertsPage assets={assets} onGoToAssets={() => setView('assets')} />
+      <Sidebar
+        activePage={view}
+        setActivePage={setView}
+        onLogout={handleLogout}
+      />
+
+      {/* =================================================
+          MAIN APPLICATION AREA
+
+          Sidebar is fixed at 238px.
+          Therefore the main area starts after it.
+      ================================================= */}
+
+      <main
+        style={{
+          marginLeft: 238,
+          width: "calc(100% - 238px)",
+
+          minWidth: 0,
+          minHeight: "100vh",
+
+          display: "flex",
+          flexDirection: "column",
+
+          background: "#F8FAFC",
+
+          overflow: "hidden",
+        }}
+      >
+        {/* ===============================================
+            TOPBAR
+        =============================================== */}
+
+        <Topbar
+          title={meta.title}
+          subtitle={meta.subtitle}
+          backendUp={backendUp}
+          lastSync={lastSync}
+          user={user}
+        />
+
+        {/* ===============================================
+            PAGE CONTENT
+        =============================================== */}
+
+        <section
+          style={{
+            flex: 1,
+
+            width: "100%",
+            minWidth: 0,
+            minHeight: 0,
+
+            overflowY: "auto",
+            overflowX: "hidden",
+
+            padding: "24px 32px 40px",
+          }}
+        >
+          <div
+            style={{
+              width: "100%",
+              maxWidth: "none",
+              margin: 0,
+            }}
+          >
+            {/* ===========================================
+                DASHBOARD
+            =========================================== */}
+
+            {view === "dashboard" && (
+              <Dashboard
+                assets={assets}
+                counts={counts}
+                uptimePct={uptimePct}
+                onGoToAssets={() => setView("assets")}
+              />
             )}
 
-            {view === 'incidents' && <Incidents />}
-            {view === 'vulnerabilities' && <Vulnerabilities />}
-            {view === 'audit' && <AuditLogs />}
-            {view === 'compliance' && <Compliance />}
-            {view === 'users' && <UsersPage />}
-            {view === 'reports' && <ReportsPage />}
+            {/* ===========================================
+                ASSETS
+            =========================================== */}
+
+            {view === "assets" && (
+              <AssetsPage
+                assets={assets}
+                counts={counts}
+                loading={loading}
+                loadError={loadError}
+                onReload={() => loadAssets(true)}
+                showToast={showToast}
+              />
+            )}
+
+            {/* ===========================================
+                CLOUD MONITORING
+            =========================================== */}
+
+            {view === "cloud" && (
+              <CloudMonitoringPage
+                assets={assets}
+                onGoToAssets={() => setView("assets")}
+              />
+            )}
+
+            {/* ===========================================
+                NETWORK MONITORING
+            =========================================== */}
+
+            {view === "network" && (
+              <NetworkMonitoringPage
+                assets={assets}
+                onGoToAssets={() => setView("assets")}
+              />
+            )}
+
+            {/* ===========================================
+                ALERTS
+            =========================================== */}
+
+            {view === "alerts" && (
+              <AlertsPage
+                assets={assets}
+                onGoToAssets={() => setView("assets")}
+              />
+            )}
+
+            {/* ===========================================
+                INCIDENTS
+            =========================================== */}
+
+            {view === "incidents" && <Incidents />}
+
+            {/* ===========================================
+                VULNERABILITIES
+            =========================================== */}
+
+            {view === "vulnerabilities" && <Vulnerabilities />}
+
+            {/* ===========================================
+                AUDIT LOGS
+            =========================================== */}
+
+            {view === "audit" && <AuditLogs />}
+
+            {/* ===========================================
+                COMPLIANCE
+            =========================================== */}
+
+            {view === "compliance" && <Compliance />}
+
+            {/* ===========================================
+                USERS
+            =========================================== */}
+
+            {view === "users" && <UsersPage />}
+
+            {/* ===========================================
+                REPORTS
+            =========================================== */}
+
+            {view === "reports" && <ReportsPage />}
           </div>
-        </div>
+        </section>
+      </main>
 
-        {toast && (
-            <div style={{
-              position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)',
-              background: toast.type === 'error' ? '#F0455D' : '#141F3D',
-              border: toast.type === 'error' ? 'none' : '1px solid rgba(255,255,255,0.1)',
-              color: toast.type === 'error' ? '#fff' : '#E2E8F0',
-              padding: '10px 18px', borderRadius: 8, fontSize: 13, zIndex: 60,
-            }}>
-              {toast.message}
-            </div>
-        )}
-      </div>
+      {/* =================================================
+          TOAST NOTIFICATION
+      ================================================= */}
+
+      {toast && (
+        <div
+          style={{
+            position: "fixed",
+
+            right: 24,
+            bottom: 24,
+
+            zIndex: 2000,
+
+            minWidth: 280,
+            maxWidth: 420,
+
+            display: "flex",
+            alignItems: "center",
+
+            gap: 12,
+
+            background: toast.type === "error" ? "#FEF2F2" : "#FFFFFF",
+
+            border:
+              toast.type === "error"
+                ? "1px solid #FECACA"
+                : "1px solid #E2E8F0",
+
+            color: toast.type === "error" ? "#B91C1C" : "#0F172A",
+
+            padding: "14px 18px",
+
+            borderRadius: 12,
+
+            boxShadow: "0 10px 30px rgba(15, 23, 42, 0.12)",
+
+            fontSize: 13,
+
+            fontWeight: 500,
+          }}
+        >
+          <span
+            style={{
+              width: 8,
+              height: 8,
+
+              borderRadius: "50%",
+
+              flexShrink: 0,
+
+              background: toast.type === "error" ? "#DC2626" : "#10B981",
+            }}
+          />
+
+          <span>{toast.message}</span>
+        </div>
+      )}
+    </div>
   );
 }
